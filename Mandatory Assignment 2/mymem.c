@@ -102,17 +102,20 @@ void *mymalloc(size_t requested)
                       new->next = next;
                       next->last = new;
                       free(current);
+                      return NULL;
                   }
                   current->size = current->size - new->size;
                   if (current->last == NULL) {
                       head = new;
                       new->next = current;
                       current->last = new;
+                      return NULL;
                   }
                   else if (current->next == NULL) {
                       prev = current->last;
                       prev->next = new;
                       current->last = new;
+                      return NULL;
                   }
                   else {
                       prev = current->last;
@@ -123,11 +126,46 @@ void *mymalloc(size_t requested)
                   }
               }
               else {
+                  if (current->next == NULL) {
+                      return NULL;
+                  }
                   current = current->next;
               }
           }
 	            return NULL;
 	  case Best:
+          struct memoryList *best;
+          while (current != NULL) {
+              if (current->size >= new->size && current->alloc == 0) {
+                  if (best == NULL) {
+                      best = current;
+                  }
+                  else if (current->size < best->size) {
+                    best = current;
+                  }
+              }
+              current = current->next;
+          }
+              if (best != NULL) {
+                  best->size = best->size - new->size;
+                  if (best->last == NULL) {
+                      head = new;
+                      new->next = best;
+                      best->last = new;
+                  } else {
+                      prev = best->last;
+                      prev->next = new;
+                      new->last = prev;
+                      new->next = best;
+                      best->last = new;
+                  }
+                  if (best->size == 0) {
+                      next = best->next;
+                      new->next = next;
+                      next->last = new;
+                      free(best);
+                  }
+              }
 	            return NULL;
 	  case Worst:
 	            return NULL;
