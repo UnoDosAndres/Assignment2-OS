@@ -202,7 +202,30 @@ void *mymalloc(size_t requested)
           }
 	            return NULL;
 	  case Next:
-
+          while (current =! NULL) {
+              if (current->alloc == 0 && current->size > new->size) {
+                  current->size = current->size - new->size;
+                  if (current->last == NULL) {
+                      head = new;
+                      current->last = new;
+                      new->next = current;
+                  }
+                  else {
+                      prev = current->last;
+                      prev->next = new;
+                      new->last = prev;
+                      current->last = new;
+                      new->next = current;
+                  }
+                  if (current->size == 0) {
+                      next = current->next;
+                      next->last = new;
+                      new->next = next;
+                      free(current);
+                  }
+              }
+              current = current->next;
+          }
 	            return NULL;
 	  }
 	return NULL;
@@ -212,6 +235,8 @@ void *mymalloc(size_t requested)
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
 {
+    struct memoryList *current = block;
+    current->alloc = 0;
 	return;
 }
 
@@ -224,30 +249,58 @@ void myfree(void* block)
 /* Get the number of contiguous areas of free space in memory. */
 int mem_holes()
 {
-	return 0;
+    int ctr = 0;
+    struct memoryList *current = head;
+    while(current != NULL) {
+        if (current->alloc == 0) {
+            ctr++;
+        }
+        current = current->next;
+    }
+	return ctr;
 }
 
 /* Get the number of bytes allocated */
 int mem_allocated()
 {
-	return 0;
+    int ctr = mySize;
+	return ctr;
 }
 
 /* Number of non-allocated bytes */
 int mem_free()
 {
-	return 0;
+    struct memoryList *current = head;
+    int ctr = 0;
+    while (current != NULL) {
+        if (current->alloc == 0) {
+            ctr = ctr + current->size
+        }
+        current = current->next;
+    }
+	return ctr;
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free()
 {
-	return 0;
+    struct memoryList *current = head;
+    int largest = 0;
+    while (current =! NULL) {
+        if (current->alloc == 0) {
+            if (current->size > largest) {
+                largest = current->size;
+            }
+        }
+    }
+	return largest;
 }
 
 /* Number of free blocks smaller than "size" bytes. */
 int mem_small_free(int size)
 {
+    int ctr = 0;
+
 	return 0;
 }       
 
