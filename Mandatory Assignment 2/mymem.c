@@ -168,8 +168,41 @@ void *mymalloc(size_t requested)
               }
 	            return NULL;
 	  case Worst:
+          struct memoryList *worst;
+          while(current =! NULL) {
+              if (current->size <= new->size && current->alloc == 0) {
+                  if (worst == NULL) {
+                      worst = current;
+                  }
+                  else if (current->size > worst->size) {
+                      worst = current;
+                  }
+              }
+          }
+          if (worst != NULL) {
+              worst->size = worst->size - new->size;
+              if (worst->last == NULL) {
+                  head = new;
+                  worst->last = new;
+                  new->next = worst;
+              }
+              else  {
+                  prev = worst->last;
+                  prev->next = new;
+                  new->last = prev;
+                  worst->last = new;
+                  new->next = next;
+              }
+              if (worst->size == 0) {
+                  next = worst->next;
+                  new->next = next;
+                  next->last = new;
+                  free(worst);
+              }
+          }
 	            return NULL;
 	  case Next:
+
 	            return NULL;
 	  }
 	return NULL;
