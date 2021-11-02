@@ -49,24 +49,19 @@ static struct memoryList *next;
 void initmem(strategies strategy, size_t sz)
 {
 	myStrategy = strategy;
-
 	/* all implementations will need an actual block of memory to use */
 	mySize = sz;
-
 	if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
+     // points to the same memory adress as the memory pool
+	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
+	myMemory = malloc(sz);
+	/* TODO: Initialize memory management structure. */
     head = (struct memoryList*) malloc(sizeof (struct memoryList));
     head->last = NULL;
     head->next = NULL;
     head->size = sz; // initialy the first block size is equals to the memory pool size.
     head->alloc = 0;  // not allocated
-    head->ptr = myMemory;  // points to the same memory adress as the memory pool
-	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
-
-
-	myMemory = malloc(sz);
-	
-	/* TODO: Initialize memory management structure. */
-
+    head->ptr = myMemory;
 
 }
 
@@ -79,12 +74,58 @@ void initmem(strategies strategy, size_t sz)
 void *mymalloc(size_t requested)
 {
 	assert((int)myStrategy > 0);
-	
+    struct memoryList *new = malloc(sizeof(memoryList));
+    struct memoryList *current = head;
+    struct memoryList *prev;
+    struct memoryList *next;
+    new.size = requested;
+    new.alloc = 1;
+    if (head->size == mySize && head->alloc == 0) {
+        new.next = current;
+        new->last = NULL;
+        current->last = new;
+        head = new;
+        return NULL;
+    }
 	switch (myStrategy)
 	  {
 	  case NotSet: 
 	            return NULL;
 	  case First:
+          while (1) {
+              if (current.size >= new->size && current->alloc == 0) {
+                  if (current->size == new->size) {
+                      prev = current->last;
+                      next = current->next;
+                      prev->next = new;
+                      new->last = prev;
+                      new->next = next;
+                      next->last = new;
+                      free(current);
+                  }
+                  current->size = current->size - new->size;
+                  if (current->last == NULL) {
+                      head = new;
+                      new->next = current;
+                      current->last = new;
+                  }
+                  else if (current->next == NULL) {
+                      prev = current->last;
+                      prev->next = new;
+                      current->last = new;
+                  }
+                  else {
+                      prev = current->last;
+                      prev->next = new;
+                      new->last = prev;
+                      new->next = current;
+                      return NULL;
+                  }
+              }
+              else {
+                  current = current->next;
+              }
+          }
 	            return NULL;
 	  case Best:
 	            return NULL;
