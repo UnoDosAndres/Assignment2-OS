@@ -1,0 +1,2 @@
+CMakeLists.txt not found in C:\Users\olyng\CLionProjects\Assignment2-OS Select CMakeLists.txt
+Toolchains are not configured Configure Disable profile
