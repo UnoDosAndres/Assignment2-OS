@@ -300,13 +300,25 @@ int mem_largest_free()
 int mem_small_free(int size)
 {
     int ctr = 0;
-
-	return 0;
+    struct memoryList *current = head;
+    while (1) {
+        if (current->size < size) {
+            ctr++
+        }
+        if (current->next == NULL) {
+            break;
+        }
+        else {
+            current = current->next
+        }
+    }
+	return ctr;
 }       
 
 char mem_is_alloc(void *ptr)
 {
-        return 0;
+    struct memoryList *current = ptr;
+        return current->alloc;
 }
 
 /* 
@@ -380,6 +392,17 @@ strategies strategyFromString(char * strategy)
 /* Use this function to print out the current contents of memory. */
 void print_memory()
 {
+    int ctr = 1;
+    struct memoryList *current = head;
+    while (1) {
+        printf("%d : %d bytes", ctr, current->size);
+        if (current->next == NULL) {
+            break;
+        }
+        else {
+            current = current->next;
+        }
+    }
 	return;
 }
 
