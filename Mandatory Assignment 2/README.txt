@@ -110,10 +110,39 @@ Answer the following questions as part of your report
 
 1) Why is it so important that adjacent free blocks not be left as such?  What
 would happen if they were permitted?
+If we want to allocate something, we need to have a way to identify  the set of free blocks.
+To find the free blocks, we need a way to choose which of them to allocate.
+When we have decided which to allocate and it dont fit, we should decide what to do with the left-overs fragment.
+A block will only have one pointer, when it’s free and from this pointer can we find the size of the block.
+When the size is found, is it important to find out if the block has any adjacent free blocks,
+it is needed to know where their location is. We need the location to coalesce them into a single free block.
+That means they become a single block instead of two or more.
+It is important to coalesce the adjective free block because, if not, the storage becomes fragmented into
+smaller and smaller blocks. Efter time the blocks will be so small,
+that it doesn't have the option to allocate any larger blocks.
+
 
 2) Which function(s) need to be concerned about adjacent free blocks?
+mem_holes() function: this function finds out how many free blocks there are in memory.
+mem_free() function: this function knows how much memory there is NOT allocated.
+mem_largest_free() function : this function holds track on how large the largest free block is.
+
+
 
 3) Name one advantage of each strategy.
+First fit: First fit has faster processing, because it takes the first available memory,
+as long as there is room for it.  The bad thing is that it wastes a lot of memory this way
+
+Best fit: This is more memory efficient, since it looks for the memory with the least possible space.
+But the bad thing is that it takes the longest because of the process it has to go through to find
+the most memory efficient one.
+
+Worst fit: Worst fit chooses the largest hole, which means there will be a large internal fragmentation.
+When the internal fragmentation is that big, the smaller processes will also be placed in the leftover hole.
+
+Next fit: next fit is a modified version of first fit and it has a very fast searching algorithm,
+it starts searching from where it left off, therefore it is faster than first fit and best fit.
+
 
 4) Run the stress test on all strategies, and look at the results (tests.out).
 What is the significance of "Average largest free block"?  Which strategy
@@ -128,17 +157,34 @@ across the memory pool.  There may be enough space to allocate a new block, but
 not in one place.  It is possible to compact the memory, so all the free blocks
 are moved to one large free block.  How would you implement this in the system
 you have built?
+Provided that all of these still exist in the same pool, a sorting algorithm might
+be a good way to make sure that the space is used efficiently, ensuring that no non-allocated
+block stands alone. From there you just fuse all these blocks into one.
 
 7) If you did implement memory compaction, what changes would you need to make
 in how such a system is invoked (i.e. from a user's perspective)?
+You would need to move all empty spare memories to 1 bigger one in order to use the space more.
+If a lot of memories have been used a couple of times they will have gotten too small to fit any other memories,
+so we mush them together in order for there to be room for new ones.
+
 
 8) How would you use the system you have built to implement realloc?  (Brief
 explanation; no code)
+Here you can make a function that takes a pointer to a memoryList, and the new size.
+
+From there, you would resize the memoryList according to the received size,
+and create a non-allocated block next to its next pointer, making a new empty space on the memory block.
+
 
 9) Which function(s) need to know which strategy is being used?  Briefly explain
 why this/these and not others.
+The only function that needs to know the strategy is mymalloc,
+since it directly affects how the memoryList is allocated.
+
 
 10) Give one advantage of implementing memory management using a linked list
 over a bit array, where every bit tells whether its corresponding byte is
 allocated.
-
+The linked list gives a more detailed view of what element exist in the pool.
+If you are unable to distinguish between them, as you would be with a bit array,
+you would be unable to run a sorting algorithm. Therefore memory compaction would be impossible.
