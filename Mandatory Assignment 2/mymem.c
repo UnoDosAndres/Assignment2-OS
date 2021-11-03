@@ -168,8 +168,64 @@ void *mymalloc(size_t requested)
               }
 	            return NULL;
 	  case Worst:
+          struct memoryList *worst;
+          while(current =! NULL) {
+              if (current->size <= new->size && current->alloc == 0) {
+                  if (worst == NULL) {
+                      worst = current;
+                  }
+                  else if (current->size > worst->size) {
+                      worst = current;
+                  }
+              }
+          }
+          if (worst != NULL) {
+              worst->size = worst->size - new->size;
+              if (worst->last == NULL) {
+                  head = new;
+                  worst->last = new;
+                  new->next = worst;
+              }
+              else  {
+                  prev = worst->last;
+                  prev->next = new;
+                  new->last = prev;
+                  worst->last = new;
+                  new->next = next;
+              }
+              if (worst->size == 0) {
+                  next = worst->next;
+                  new->next = next;
+                  next->last = new;
+                  free(worst);
+              }
+          }
 	            return NULL;
 	  case Next:
+          while (current =! NULL) {
+              if (current->alloc == 0 && current->size > new->size) {
+                  current->size = current->size - new->size;
+                  if (current->last == NULL) {
+                      head = new;
+                      current->last = new;
+                      new->next = current;
+                  }
+                  else {
+                      prev = current->last;
+                      prev->next = new;
+                      new->last = prev;
+                      current->last = new;
+                      new->next = current;
+                  }
+                  if (current->size == 0) {
+                      next = current->next;
+                      next->last = new;
+                      new->next = next;
+                      free(current);
+                  }
+              }
+              current = current->next;
+          }
 	            return NULL;
 	  }
 	return NULL;
@@ -179,6 +235,25 @@ void *mymalloc(size_t requested)
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
 {
+    struct memoryList *current = block;
+    current->alloc = 0;
+    struct memoryList *prev = current->last;
+    struct memoryList *next = current->next;
+
+    if (prev->alloc == 0) {
+        current->size = prev->size + current->size;
+        struct memoryList *secondprev = prev.last;
+        secondprev->next = current;
+        current->last = secondprev;
+        free(prev);
+    }
+    if (next->alloc == 0) {
+        current->size = next->size + current->size;
+        struct memoryList *secondnext = next->next;
+        secondnext->last = current;
+        current->next = secondnext;
+        free(next);
+    }
 	return;
 }
 
@@ -191,36 +266,76 @@ void myfree(void* block)
 /* Get the number of contiguous areas of free space in memory. */
 int mem_holes()
 {
-	return 0;
+    int ctr = 0;
+    struct memoryList *current = head;
+    while(current != NULL) {
+        if (current->alloc == 0) {
+            ctr++;
+        }
+        current = current->next;
+    }
+	return ctr;
 }
 
 /* Get the number of bytes allocated */
 int mem_allocated()
 {
-	return 0;
+    int ctr = mySize;
+	return ctr;
 }
 
 /* Number of non-allocated bytes */
 int mem_free()
 {
-	return 0;
+    struct memoryList *current = head;
+    int ctr = 0;
+    while (current != NULL) {
+        if (current->alloc == 0) {
+            ctr = ctr + current->size
+        }
+        current = current->next;
+    }
+	return ctr;
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free()
 {
-	return 0;
+    struct memoryList *current = head;
+    int largest = 0;
+    while (current =! NULL) {
+        if (current->alloc == 0) {
+            if (current->size > largest) {
+                largest = current->size;
+            }
+        }
+    }
+	return largest;
 }
 
 /* Number of free blocks smaller than "size" bytes. */
 int mem_small_free(int size)
 {
-	return 0;
+    int ctr = 0;
+    struct memoryList *current = head;
+    while (1) {
+        if (current->size < size) {
+            ctr++
+        }
+        if (current->next == NULL) {
+            break;
+        }
+        else {
+            current = current->next
+        }
+    }
+	return ctr;
 }       
 
 char mem_is_alloc(void *ptr)
 {
-        return 0;
+    struct memoryList *current = ptr;
+        return current->alloc;
 }
 
 /* 
@@ -294,6 +409,17 @@ strategies strategyFromString(char * strategy)
 /* Use this function to print out the current contents of memory. */
 void print_memory()
 {
+    int ctr = 1;
+    struct memoryList *current = head;
+    while (1) {
+        printf("%d : %d bytes", ctr, current->size);
+        if (current->next == NULL) {
+            break;
+        }
+        else {
+            current = current->next;
+        }
+    }
 	return;
 }
 
