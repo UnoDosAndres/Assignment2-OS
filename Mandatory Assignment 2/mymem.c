@@ -237,6 +237,23 @@ void myfree(void* block)
 {
     struct memoryList *current = block;
     current->alloc = 0;
+    struct memoryList *prev = current->last;
+    struct memoryList *next = current->next;
+
+    if (prev->alloc == 0) {
+        current->size = prev->size + current->size;
+        struct memoryList *secondprev = prev.last;
+        secondprev->next = current;
+        current->last = secondprev;
+        free(prev);
+    }
+    if (next->alloc == 0) {
+        current->size = next->size + current->size;
+        struct memoryList *secondnext = next->next;
+        secondnext->last = current;
+        current->next = secondnext;
+        free(next);
+    }
 	return;
 }
 
