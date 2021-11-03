@@ -6,6 +6,7 @@
 #include <time.h>
 
 
+typedef struct memoryList memoryList;
 /* The main structure for implementing memory allocation.
  * You may change this to fit your implementation.
  */
@@ -73,15 +74,18 @@ void initmem(strategies strategy, size_t sz)
 
 void *mymalloc(size_t requested)
 {
+    //first we initialize the pointers we're going to need when runnning the algorithms.
 	assert((int)myStrategy > 0);
     struct memoryList *new = malloc(sizeof(memoryList));
     struct memoryList *current = head;
-    struct memoryList *prev;
-    struct memoryList *next;
-    new.size = requested;
-    new.alloc = 1;
+    struct memoryList *prev = NULL;
+    struct memoryList *next = NULL;
+    struct memoryList *best = NULL;
+    struct memoryList *worst = NULL;
+    new->size = requested;
+    new->alloc = 1;
     if (head->size == mySize && head->alloc == 0) {
-        new.next = current;
+        new->next = current;
         new->last = NULL;
         current->last = new;
         head = new;
@@ -89,11 +93,13 @@ void *mymalloc(size_t requested)
     }
 	switch (myStrategy)
 	  {
-	  case NotSet: 
+	  case NotSet:
+          // If no strategy is set we return NULL
 	            return NULL;
 	  case First:
+          // in this strategy we loop through the memory block until we find an open space that can house our new block.
           while (1) {
-              if (current.size >= new->size && current->alloc == 0) {
+              if (current->size >= new->size && current->alloc == 0) {
                   if (current->size == new->size) {
                       prev = current->last;
                       next = current->next;
@@ -132,9 +138,8 @@ void *mymalloc(size_t requested)
                   current = current->next;
               }
           }
-	            return NULL;
 	  case Best:
-          struct memoryList *best;
+          // In this, we loop through the block no matter what. When reaching the end, the "best" pointer will be the place in which we put our new memory block.
           while (current != NULL) {
               if (current->size >= new->size && current->alloc == 0) {
                   if (best == NULL) {
@@ -168,8 +173,8 @@ void *mymalloc(size_t requested)
               }
 	            return NULL;
 	  case Worst:
-          struct memoryList *worst;
-          while(current =! NULL) {
+          //Worst works the same way as best but instead of switching pointer when the space is smaller, is changes when we find a place larger.
+          while(1) {
               if (current->size <= new->size && current->alloc == 0) {
                   if (worst == NULL) {
                       worst = current;
@@ -177,6 +182,12 @@ void *mymalloc(size_t requested)
                   else if (current->size > worst->size) {
                       worst = current;
                   }
+              }
+              if (current->next == NULL) {
+                  break;
+              }
+              else {
+                  current = current->next;
               }
           }
           if (worst != NULL) {
@@ -202,7 +213,8 @@ void *mymalloc(size_t requested)
           }
 	            return NULL;
 	  case Next:
-          while (current =! NULL) {
+          // Next loops through the memory block, until it finds an allocated block. If the next block is not allocated and can house our new block, we place it there.
+          while (1) {
               if (current->alloc == 0 && current->size > new->size) {
                   current->size = current->size - new->size;
                   if (current->last == NULL) {
@@ -224,7 +236,12 @@ void *mymalloc(size_t requested)
                       free(current);
                   }
               }
-              current = current->next;
+              if (current->next == NULL) {
+                  break;
+              }
+              else {
+                  current = current->next;
+              }
           }
 	            return NULL;
 	  }
@@ -242,7 +259,7 @@ void myfree(void* block)
 
     if (prev->alloc == 0) {
         current->size = prev->size + current->size;
-        struct memoryList *secondprev = prev.last;
+        struct memoryList *secondprev = prev->last;
         secondprev->next = current;
         current->last = secondprev;
         free(prev);
@@ -291,7 +308,7 @@ int mem_free()
     int ctr = 0;
     while (current != NULL) {
         if (current->alloc == 0) {
-            ctr = ctr + current->size
+            ctr = ctr + current->size;
         }
         current = current->next;
     }
@@ -303,11 +320,17 @@ int mem_largest_free()
 {
     struct memoryList *current = head;
     int largest = 0;
-    while (current =! NULL) {
+    while (1) {
         if (current->alloc == 0) {
             if (current->size > largest) {
                 largest = current->size;
             }
+        }
+        if (current->next == NULL) {
+            break;
+        }
+        else {
+            current = current->next;
         }
     }
 	return largest;
@@ -320,13 +343,13 @@ int mem_small_free(int size)
     struct memoryList *current = head;
     while (1) {
         if (current->size < size) {
-            ctr++
+            ctr++;
         }
         if (current->next == NULL) {
             break;
         }
         else {
-            current = current->next
+            current = current->next;
         }
     }
 	return ctr;
